@@ -21,7 +21,9 @@ export default function RootLayout({
         inter.className
       )}
     >
-      <body>{children}</body>
+      <body className="min-h-screen pt-12 bg-slate-50 antialiased">
+        {children}
+      </body>
     </html>
   );
 }
