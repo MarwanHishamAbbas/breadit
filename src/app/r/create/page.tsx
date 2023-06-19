@@ -47,7 +47,7 @@ function Page() {
     },
     onSuccess: async (data) => {
       router.push(`/r/${data}`);
-      toast({
+      return toast({
         title: `${data} is successfully created`,
         description: "You are now subscribed to it",
       });
