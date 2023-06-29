@@ -1,18 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { useCustomToasts } from "@/hooks/use-custom-toast";
+import { toast } from "@/hooks/use-toast";
+import { SubredditValidatorPayload } from "@/lib/validators/subreddit";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { SubredditValidatorPayload } from "@/lib/validators/subreddit";
-import { toast } from "@/hooks/use-toast";
-import { useCustomToasts } from "@/hooks/use-custom-toast";
-import { Input } from "@/components/ui/Input";
-function Page() {
-  const [input, setinput] = useState<string>("");
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+const Page = () => {
   const router = useRouter();
+  const [input, setInput] = useState<string>("");
   const { loginToast } = useCustomToasts();
 
   const { mutate: createCommunity, isLoading } = useMutation({
@@ -20,6 +21,7 @@ function Page() {
       const payload: SubredditValidatorPayload = {
         name: input,
       };
+
       const { data } = await axios.post("/api/subreddit", payload);
       return data as string;
     },
@@ -27,43 +29,49 @@ function Page() {
       if (err instanceof AxiosError) {
         if (err.response?.status === 409) {
           return toast({
-            title: "Subreddit Already Exits",
-            description: "Please choose different subreddit name",
+            title: "Subreddit already exists.",
+            description: "Please choose a different name.",
             variant: "destructive",
           });
         }
+
         if (err.response?.status === 422) {
           return toast({
-            title: "Invalid Subreddit Name",
-            description:
-              "Please choose subreddit name between 2 and 21 character",
+            title: "Invalid subreddit name.",
+            description: "Please choose a name between 3 and 21 letters.",
             variant: "destructive",
           });
         }
+
         if (err.response?.status === 401) {
           return loginToast();
         }
       }
-    },
-    onSuccess: async (data) => {
-      router.push(`/r/${data}`);
-      return toast({
-        title: `${data} is successfully created`,
-        description: "You are now subscribed to it",
+
+      toast({
+        title: "There was an error.",
+        description: "Could not create subreddit.",
+        variant: "destructive",
       });
     },
+    onSuccess: (data) => {
+      router.push(`/r/${data}`);
+    },
   });
+
   return (
     <div className="container flex items-center h-full max-w-3xl mx-auto">
       <div className="relative bg-white w-full h-fit p-4 rounded-lg space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-semibold">Create a community</h1>
+          <h1 className="text-xl font-semibold">Create a Community</h1>
         </div>
-        <hr className="bg-zinc-500 h-px" />
+
+        <hr className="bg-red-500 h-px" />
+
         <div>
           <p className="text-lg font-medium">Name</p>
           <p className="text-xs pb-2">
-            Community names including capilaization cannot be changed
+            Community names including capitalization cannot be changed.
           </p>
           <div className="relative">
             <p className="absolute text-sm left-0 w-8 inset-y-0 grid place-items-center text-zinc-400">
@@ -71,13 +79,18 @@ function Page() {
             </p>
             <Input
               value={input}
-              onChange={(event) => setinput(event.target.value)}
+              onChange={(e) => setInput(e.target.value)}
               className="pl-6"
             />
           </div>
         </div>
+
         <div className="flex justify-end gap-4">
-          <Button variant="subtle" onClick={() => router.back()}>
+          <Button
+            disabled={isLoading}
+            variant="subtle"
+            onClick={() => router.back()}
+          >
             Cancel
           </Button>
           <Button
@@ -91,6 +104,6 @@ function Page() {
       </div>
     </div>
   );
-}
+};
 
 export default Page;
